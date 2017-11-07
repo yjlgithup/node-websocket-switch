@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv= -EQUIV="pragma" content="no-cache">
+    <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+    <meta http-equiv="expires" content="0">
+    <title>socket</title>
+    <style>
+        .box {
+            width: 807px;
+            height: 650px;
+            border: 1px solid black;
+            display: inline-block;
+            margin-left:350px;
+            margin-top:20px;
+        }
+    </style>
+</head>
+<body>
+
+
+<img src="" alt="" class="box">
+<canvas id="cas" width="807" height="650" ></canvas>
+</body>
+<script src="node_modules/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript" src="node_modules/socket.io/node_modules/socket.io-client/dist/socket.io.js"></script>
+<script type="text/javascript">
+    var socket = io.connect('10.116.17.61:8080');
+// （1）第一种方案、
+
+//    setInterval(function () {
+//        socket.emit('hi', 'hello!');
+//    },100);
+
+//接收来自服务端的信息事件c_hi
+//    socket.on('c_hi', function (result) {
+//        $('.box').attr('src', result.info);
+//    })
+
+//    （2） 第二种方法
+    var cas = document.getElementById('cas');
+    var ctx = cas.getContext('2d');
+    var img = new Image();
+    var timer = null;
+    var data = null;
+    timer = setInterval(function(data){
+        data = {
+            type:"requestImage",
+            msg:'要图片'
+        }
+        socket.emit('hi',data)
+    },100);
+
+    socket.on('c_hi',function(result){
+        switch(result.type){
+            case "connected":
+            case "disconnect":
+                timer = setInterval(function(){
+                    socket.emit('hi', {
+                        type:"requestImage",
+                        msg:"要图片"
+                    });
+                },100);
+                break;
+            case "imgs":
+                    clearInterval(timer);
+                    img.src = result.info;
+                    img.onload = function(){
+                        ctx.drawImage(img,0,0);
+                    }
+
+//                $('.box').attr('src',result.info);
+                break;
+        }
+    })
+
+</script>
+</html>
